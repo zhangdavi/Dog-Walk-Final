@@ -111,43 +111,45 @@ class ViewController: UIViewController, UITableViewDataSource {
     commitEditingStyle
     editingStyle: UITableViewCellEditingStyle,
     forRowAtIndexPath indexPath: NSIndexPath) {
-    
+//    如果cell中的删除被点击
     if editingStyle == UITableViewCellEditingStyle.Delete {
     
-    //1
+    //1 和药删除的row进行关联
     let walkToRemove =
     currentDog.walks[indexPath.row] as! Walk
     
-    //2
+    //2 Remove the walk from Core Data by calling NSManagedObjectContext’s deleteObject method. Core Data also takes care of removing the deleted walk from the current dog’s walks relationship.
     managedContext.deleteObject(walkToRemove)
     
-    //3
+    //3 删除后重新更新数据库
     var error: NSError?
     if !managedContext.save(&error) {
     println("Could not save: \(error)")
     }
     
-    //4
+    //4 同时更新显示
     tableView.deleteRowsAtIndexPaths([indexPath],
     withRowAnimation: UITableViewRowAnimation.Automatic)
     }
   }
-  
+//  增加一个新的walk纪录
   @IBAction func add(sender: AnyObject) {
     
-    //Insert new Walk entity into Core Data
+    //Insert new Walk entity into Core Data给walk 中插入一个空的数据
     let walkEntity = NSEntityDescription.entityForName("Walk",
       inManagedObjectContext: managedContext)
     
     let walk = Walk(entity: walkEntity!,
       insertIntoManagedObjectContext: managedContext)
-//    当前系统日期
+//    当前系统日期，开始填写这个空的数据
     walk.date = NSDate()
     
     //Insert the new Walk into the Dog's walks set
+//    现把当前狗的walks mutablecopy 一份出来作为可mutable（可变的）的数据，在这个数据上添加新的数据后，再copy回去，这是因为NSOrderedSet数据是不可mutable的
     var walks =
     currentDog.walks.mutableCopy() as! NSMutableOrderedSet
-    
+
+    //    Appends a given object to the end of the mutable ordered set, if it is not already a member.
     walks.addObject(walk)
     
     currentDog.walks = walks.copy() as! NSOrderedSet
